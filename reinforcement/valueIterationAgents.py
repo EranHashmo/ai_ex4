@@ -70,7 +70,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         cur_calc = 0
         for next_state, prob in self.mdp.getTransitionStatesAndProbs(state, action):
             cur_calc += prob * self.values[next_state]
-        return self.mdp.getReward(state, action, None) + self.discount * cur_calc
+        return self.mdp.getReward(state, None, None) + (self.discount * cur_calc) - self.values[state]
 
     def getPolicy(self, state):
         """
