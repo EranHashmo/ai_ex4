@@ -40,17 +40,15 @@ class ValueIterationAgent(ValueEstimationAgent):
 
         "*** YOUR CODE HERE ***"
         for i in range(iterations):
-            old_values = self.values.copy()
             for state in mdp.getStates():
-                sums = []
-                for action in mdp.getPossibleActions(state):
-                    cur_calc = 0
-                    for next_state, prob in mdp.getTransitionStatesAndProbs(state, action):
-                        cur_calc += prob * old_values[next_state]
-                    sums.append(cur_calc)
-                if len(sums) == 0:
-                    sums.append(0)
-                self.values[state] = mdp.getReward(state, None, None) + discount * max(sums)
+                if self.mdp.isTerminal(state):
+                    self.values[state] = mdp.getReward(state, None, None)
+                else:
+                    cur_calc = max(
+                        sum(prob * self.values[next_state] for next_state, prob in
+                            self.mdp.getTransitionStatesAndProbs(state, action))
+                        for action in self.mdp.getPossibleActions(state))
+                    self.values[state] = mdp.getReward(state, None, None) + (discount * cur_calc)
 
     def getValue(self, state):
         """
@@ -81,12 +79,13 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
+        if self.mdp.isTerminal(state):
+            return None
+
         actions = util.Counter()
         for action in self.mdp.getPossibleActions(state):
-            cur_calc = 0
-            for next_state, prob in self.mdp.getTransitionStatesAndProbs(state, action):
-                cur_calc += prob * self.values[next_state]
-            actions[action] = cur_calc
+            actions[action] = sum(prob * self.values[next_state] for next_state, prob in
+                                  self.mdp.getTransitionStatesAndProbs(state, action))
         return actions.argMax()
 
     def getAction(self, state):
